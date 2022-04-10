@@ -1,6 +1,19 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
+--Our design is based on the diagram given below the code part.
+--Regarding the delays we use code as the one given below, to create delays via the use of flip - flops(D):
+--
+--  delay_n:process (clk)		--n clock cycles
+--  begin
+--    if rising_edge(clk) then
+--      delay0 <= delay1;
+--      ....
+--      ....
+--      ....
+--      delayn-1 <= A(x);
+--    end if;
+--  end process;
 
 entity Sychronous_Systolic_4bit_Multiplier is
     Port ( clk : in std_logic;
@@ -12,7 +25,7 @@ entity Sychronous_Systolic_4bit_Multiplier is
 end Sychronous_Systolic_4bit_Multiplier;
 
 architecture Structural of Sychronous_Systolic_4bit_Multiplier is
-
+    --Our single compoment used 16 times is the Sychronous FA
     component Building_Block is
     port(
        clk : in std_logic;
@@ -27,7 +40,16 @@ architecture Structural of Sychronous_Systolic_4bit_Multiplier is
        Bout: out std_logic
         );
   end component;
-  
+  --About Delays:
+  --We have 4 categories:
+  --1)Delays for the Cin of each FA
+  --2)Delays for the "straight"(according to the diagram) inputs ,B
+  --3)Delays for the "diagonal"(according to the diagram) inputs ,A
+  --4)Delays for the Outputs of the last Full Adders-counting from top to bottom-(giving us the multiplication result)
+  --
+  --In the following code we distinguish every type of delay from each other according to the above enumeration.
+
+
   --Signals regarding subtotals
   signal P0 : std_logic_vector(9 downto 0):="0000000000"; --ready
   signal P1 : std_logic_vector(8 downto 0):="000000000"; --ready
@@ -68,7 +90,14 @@ architecture Structural of Sychronous_Systolic_4bit_Multiplier is
   signal delayC2,delayC4 : std_logic:='0';
   signal delayC5,delayC6 : std_logic:='0';
 begin
-  
+--
+--
+--
+--
+--
+--
+--
+
   Building_Block_INSTANCE_0: Building_Block
     port map ( clk => clk,
                rst => rst,
@@ -81,7 +110,8 @@ begin
                Aout => A0(0),
                Bout => B0(0));
 
- delay_P0:process (clk)		--5 clock cycles
+--Type 4
+ delay_P0:process (clk)		--10 clock cycles
 begin
   if rising_edge(clk) then
     Product(0) <= P0(9);
@@ -96,8 +126,8 @@ begin
     P0(1) <= P0(0);
   end if;
 end process;
-               
- delay_1:process (clk)		--5 clock cycles
+--Type 3             
+ delay_1:process (clk)		
 begin
   if rising_edge(clk) then
     delayA1 <= A(1);
@@ -115,8 +145,8 @@ end process;
                Cout => C0(1),
                Aout => A1(0),
                Bout => B0(1));
-               
- delay_2:process (clk)		--5 clock cycles
+--Type 3             
+ delay_2:process (clk)		--2 clock cycles
 begin
   if rising_edge(clk) then
     delayA2 <= delayA3;
@@ -135,8 +165,8 @@ end process;
                Cout => C0(2),
                Aout => A2(0),
                Bout => B0(2));
-
- delay_3:process (clk)		--5 clock cycles
+--Type 3
+ delay_3:process (clk)		--3 clock cycles
 begin
   if rising_edge(clk) then
     delayA4 <= delayA5;
@@ -156,8 +186,8 @@ end process;
                Cout => C0(3),
                Aout => A3(0),
                Bout => B0(3));
-
- delay_4:process (clk)		--5 clock cycles
+--Type 2
+ delay_4:process (clk)		--2 clock cycles
 begin
   if rising_edge(clk) then
     delayB1 <= delayB2;
@@ -177,7 +207,8 @@ end process;
                Aout => A0(1),
                Bout => B1(0));
 
- delay_P1:process (clk)		--5 clock cycles
+--Type 4
+ delay_P1:process (clk)		--8 clock cycles
 begin
   if rising_edge(clk) then
     Product(1) <= P1(8);
@@ -214,12 +245,12 @@ end process;
                Cout => C1(2),
                Aout => A2(1),
                Bout => B1(2));
-
+--Type 1
  delay_5:process (clk)		--5 clock cycles
 begin
   if rising_edge(clk) then
-    delayC1 <= delayC2;
-    delayC2 <= C0(3);
+    delayC1 <= C0(3);
+    --delayC2 <= C0(3);
   end if;
 end process;
 
@@ -234,14 +265,14 @@ end process;
                Cout => C1(3),
                Aout => A3(1),
                Bout => B1(3));
-
+--Type 2
  delay_6:process (clk)		--5 clock cycles
 begin
   if rising_edge(clk) then
     delayB3 <= delayB4;
+    delayB4 <= delayB5;
     delayB5 <= delayB6;
-    delayB6 <= delayB7;
-    delayB7 <= B(2);
+    delayB6 <= B(2);
   end if;
 end process;
 
@@ -256,8 +287,8 @@ end process;
                Cout => C2(0),
                Aout => A0(2),
                Bout => B2(0));
-
- delay_P2:process (clk)		--5 clock cycles
+--Type 4
+ delay_P2:process (clk)		--7 clock cycles
 begin
   if rising_edge(clk) then
     Product(2) <= P2(7);
@@ -292,12 +323,12 @@ end process;
                Cout => C2(2),
                Aout => A2(2),
                Bout => B2(2));
-
- delay_7:process (clk)		--5 clock cycles
+--Type 1
+ delay_7:process (clk)		--2 clock cycles
 begin
   if rising_edge(clk) then
-    delayC3 <= delayC4;
-    delayC4 <= C1(3);
+    delayC3 <= C1(3);
+    --delayC4 <= C1(3);
   end if;
 end process;
 
@@ -312,16 +343,16 @@ end process;
                Cout => C2(3),
                Aout => A3(2),
                Bout => B2(3));
-
- delay_8:process (clk)		--5 clock cycles
+--Type 2
+ delay_8:process (clk)		--6 clock cycles
 begin
   if rising_edge(clk) then
+    delayB7 <= delayB8;
     delayB8 <= delayB9;
     delayB9 <= delayB10;
     delayB10 <= delayB11;
-    delayB12 <= delayB13;
-    delayB13 <= delayB14;
-    delayB14 <= B(3);
+    delayB11 <= delayB12;
+    delayB12 <= B(3);
   end if;
 end process;
 
@@ -330,14 +361,14 @@ end process;
                rst => rst,
                Sin => P3(2),
                Ain => A0(2),
-               Bin => delayB8,
+               Bin => delayB7,
                Cin => '0',
                Sout =>P3(3),
                Cout => C3(0),
                Aout => A0(3),
                Bout => B3(0));
- 
- delay_P3:process (clk)		--5 clock cycles
+--Type 4
+ delay_P3:process (clk)		--4 clock cycles
 begin
   if rising_edge(clk) then
     Product(3) <= P3(6);
@@ -358,8 +389,8 @@ end process;
                Cout => C3(1),
                Aout => A1(3),
                Bout => B3(1));
-
- delay_P4:process (clk)		--5 clock cycles
+--Type 4
+ delay_P4:process (clk)		--3 clock cycles
 begin
   if rising_edge(clk) then
     Product(4) <= P4(4);
@@ -379,20 +410,20 @@ end process;
                Cout => C3(2),
                Aout => A2(3),
                Bout => B3(2));
-
- delay_P5:process (clk)		--5 clock cycles
+--Type 4
+ delay_P5:process (clk)		--2 clock cycles
 begin
   if rising_edge(clk) then
     Product(5) <= P5(2);
     P5(2) <= P5(1);   
   end if;
 end process;
-
- delay_9:process (clk)		--5 clock cycles
+--Type 1
+ delay_9:process (clk)		--2 clock cycles
 begin
   if rising_edge(clk) then
-    delayC5 <= delayC6;
-    delayC6 <= C2(3);
+    delayC5 <= C2(3);
+    --delayC6 <= C2(3);
   end if;
 end process;
 
@@ -407,8 +438,8 @@ end process;
                Cout => P7,
                Aout => A3(3),
                Bout => B3(3));
-
- delay_P6_P7:process (clk)		--5 clock cycles
+--Type 4
+ delay_P6_P7:process (clk)		--2 clock cycles
 begin
   if rising_edge(clk) then
     Product(7) <= P7;
